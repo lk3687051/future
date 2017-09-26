@@ -2,3 +2,7 @@
 *.pyo
 build/
 dist/
+data/dataset
+data/feature
+results
+future.egg-info
