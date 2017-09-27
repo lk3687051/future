@@ -3,6 +3,11 @@ def get_predict_dateset(date, name):
     if name is 'history':
         return history_feature.get_predict_dateset(date)
 
+def gen_train_dataset(name):
+    if name is 'history':
+        print('gen train set with ' + name)
+        return history_feature.gen_train_feature()
+
 def get_train_dataset(name):
     if name is 'history':
         return history_feature.get_train_dataset()

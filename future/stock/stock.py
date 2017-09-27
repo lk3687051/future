@@ -4,6 +4,7 @@ import datetime
 from future.utils.config import get_config
 import os.path
 dataset_path = get_config('path', 'dateset')
+feature_path = get_config('path', 'feature')
 buyed_list = []
 def set_buy_list(buyed):
     global buyed_list
@@ -68,10 +69,11 @@ class StockInfo(object):
 class StockFeature(object):
     @classmethod
     def set(cls, name, date):
-        store = pd.HDFStore('C:\stock_data/features/%s.h5' % (name))
+        feature_path
+        store = pd.HDFStore(os.path.join(feature_path, '%s.h5' % (name)))
         store['/feature'] = date
 
     @classmethod
     def get(cls, name):
-        store = pd.HDFStore('C:\stock_data/features/%s.h5' % (name))
+        store = pd.HDFStore(os.path.join(feature_path, '%s.h5' % (name)))
         return store['/feature']

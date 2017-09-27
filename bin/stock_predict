@@ -12,37 +12,29 @@ from future.utils.config import get_config
 import os.path
 result_path = get_config('path', 'results')
 print(result_path)
-date = '2017-09-26'
+date = '2017-09-27'
 result = {}
 print("Predict Stock at " + date)
 # Model Three
 print("=========================================================")
 print("MODEL THREE HISTORY MEAN")
 model = ThreeMeanStockModel()
-for version, stock, probabilities in model.predict(date):
-    if 'three_mean' + version + '.0' not in result.keys():
-        result['three_mean' + version + '.0'] = {}
-        result['three_mean' + version + '.1'] = {}
-        result['three_mean' + version + '.2'] = {}
-    result['three_mean' + version + '.0'][stock] = probabilities[0]
-    result['three_mean' + version + '.1'][stock] = probabilities[1]
-    result['three_mean' + version + '.2'][stock] = probabilities[2]
+for r in model.predict(date):
+    result.update(r)
+
 #Model 1
 print("=========================================================")
 print("MODEL ONE HISTORY MEAN")
 model = OneMeanStockModel()
-for version, stock, probabilities in model.predict(date):
-    if 'one_mean' + version + '.0' not in result.keys():
-        result['one_mean' + version + '.0'] = {}
-        result['one_mean' + version + '.1'] = {}
-        result['one_mean' + version + '.2'] = {}
-    result['one_mean' + version + '.0'][stock] = probabilities[0]
-    result['one_mean' + version + '.1'][stock] = probabilities[1]
-    result['one_mean' + version + '.2'][stock] = probabilities[2]
-
+for r in model.predict(date):
+    result.update(r)
 df = pd.DataFrame.from_dict(result)
-sum_cols = [col for col in df.columns if '.2' in col]
-df['sum'] = df[sum_cols].sum(axis=1)
+
+down_cols = [col for col in df.columns if col.startswith('0')]
+df['down'] = df[down_cols].sum(axis=1)
+
+up_cols = [col for col in df.columns if col.startswith('2')]
+df['up'] = df[up_cols].sum(axis=1)
 
 print(result_path)
 df.to_csv(os.path.join(result_path, '%s.csv' % (date)), index=True)

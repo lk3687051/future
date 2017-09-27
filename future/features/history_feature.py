@@ -3,14 +3,29 @@ import numpy as np
 import sys
 from future.stock.stock import StockInfo, StockHistory, StockFeature
 import datetime
-TRAIN = False
+import random
 def get_stocks():
     s_list = StockInfo.get().index.tolist()
     return s_list
 
-def get_stocks_aaa():
+def get_stocks_with_outstanding():
     info = StockInfo.get()
+
     return info.index.tolist(), info['outstanding'].tolist()
+
+def samples_to_df(samples, length):
+    # convert list to dataframe
+    keys = None
+    d = np.zeros((len(samples), length))
+    i = 0
+    for (index, sample) in samples.items():
+        if i is 0:
+            keys = sample.keys()
+        d[i] = list(sample.values())
+        i = i + 1
+
+    df = pd.DataFrame(data=d, index=samples.keys(), columns=keys)
+    return df
 
 def get_pre_process(df):
     feature_df = pd.DataFrame()
@@ -51,12 +66,49 @@ def get_feature(pre_feature):
     sample['target_price_change5'] = pre_feature.at[pre_feature.index[0],'target_price_change5']
     return sample
 
-def feature(date = None):
+def gen_train_feature():
     # Get stocks
-    stocks, outstandings = get_stocks_aaa()
+    print("Begin gen train feature")
+    stocks, outstandings = get_stocks_with_outstanding()
     samples = {}
-    if date:
-        begin_date = (datetime.datetime.strptime(date,'%Y-%m-%d')  - datetime.timedelta(days=100)).strftime('%Y-%m-%d')
+
+    for (stock, outstanding) in zip(stocks, outstandings):
+        # Get stock dataframe
+        index = 0
+        df = StockHistory.get_history(stock_id = stock)
+
+        if df is None or df.empty:
+            continue
+
+        df = df['2017-08-25': ]
+        if 'turnover' not in list(df.columns.values):
+            df['turnover'] = df['volume'] / (outstanding * 10000)
+
+        # When get all features and labels, first five did not have label
+        pre_features = get_pre_process(df = df)[5:]
+
+        # Make sure the features is more than 60 days
+        if pre_features is None or len(pre_features) < index + 60:
+            continue
+
+        for i in range(0, len(pre_features) - 60 , 5):
+            date_time = pre_features.index[i]
+            samples[stock + '_' + date_time] = get_feature(pre_features[i:i+60])
+
+    df = samples_to_df(samples, 303)
+    train_df = df.sample(frac=0.9)
+    test_df = df.loc[~df.index.isin(train_df.index)]
+    StockFeature.set('history_train', train_df)
+    StockFeature.set('history_test', test_df)
+    print(train_df)
+    print(test_df)
+    return None
+
+def daily_feature(date = None):
+    # Get stocks
+    stocks, outstandings = get_stocks_with_outstanding()
+    samples = {}
+    begin_date = (datetime.datetime.strptime(date,'%Y-%m-%d')  - datetime.timedelta(days=100)).strftime('%Y-%m-%d')
 
     for (stock, outstanding) in zip(stocks, outstandings):
         # Get stock dataframe
@@ -67,7 +119,7 @@ def feature(date = None):
             continue
 
         # If have date means we need preedict or eval
-        if date and date in df.index:
+        if date in df.index:
             index = df.index.tolist().index(date)
             if len(df) < 61 or df.index[60] < begin_date:
                 continue
@@ -76,43 +128,25 @@ def feature(date = None):
 
         if 'turnover' not in list(df.columns.values):
             df['turnover'] = df['volume'] / (outstanding * 10000)
-        if date:
-            # Why here is 61, because the last close
-            pre_features = get_pre_process(df = df[:index + 61].copy())
-        else:
-            # When get all features and labels, first five did not have label
-            pre_features = get_pre_process(df = df)[5:]
+
+        # Why here is 61, because the last close
+        pre_features = get_pre_process(df = df[:index + 61].copy())
 
         # Make sure the features is more than 60 days
         if pre_features is None or len(pre_features) < index + 60:
             continue
 
-        if date:
-            samples[stock] = get_feature(pre_features[index : index + 60])
-        else:
-            for i in range(0, len(pre_features) - 60 , 5):
-                date_time = pre_features.index[i]
-                samples[stock + '_' + date_time] = get_feature(pre_features[i:i+60])
+        samples[stock] = get_feature(pre_features[index : index + 60])
 
     # convert list to dataframe
-    keys = None
-    d = np.zeros((len(samples), 303))
-    i = 0
-    for (index, sample) in samples.items():
-        if i is 0:
-            keys = sample.keys()
-        d[i] = list(sample.values())
-        i = i + 1
-
-    df = pd.DataFrame(data=d, index=samples.keys(), columns=keys)
-    return df
+    return samples_to_df(samples, 303)
 
 def get_predict_dateset(date):
-    df = feature(date)
+    df = daily_feature(date)
     return df.iloc[:, 0: 300]
 
 def get_eval_dataset(date):
-    df = feature(date)
+    df = daily_feature(date)
     return df[:, 0: 300], df[:, 0: 303]
 
 def get_train_dataset():
