@@ -31,6 +31,9 @@ class StockModel():
 
     def predict(self,  date):
         self.get_dataset(date=date)
+        if self.dataset is None:
+            return None
+
         self.input_fn = tf.estimator.inputs.numpy_input_fn(
                     x={"x": self.dataset.values.astype(np.float32)},
                     y=None,

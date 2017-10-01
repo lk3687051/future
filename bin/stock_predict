@@ -10,31 +10,49 @@ from future.stock.stock import set_buy_list, get_buy_list
 import pandas as pd
 from future.utils.config import get_config
 import os.path
-result_path = get_config('path', 'results')
-print(result_path)
-date = '2017-09-27'
-result = {}
-print("Predict Stock at " + date)
-# Model Three
-print("=========================================================")
-print("MODEL THREE HISTORY MEAN")
-model = ThreeMeanStockModel()
-for r in model.predict(date):
-    result.update(r)
+import sys
 
-#Model 1
-print("=========================================================")
-print("MODEL ONE HISTORY MEAN")
-model = OneMeanStockModel()
-for r in model.predict(date):
-    result.update(r)
-df = pd.DataFrame.from_dict(result)
+def predict(date):
+    result = {}
+    print("Predict Stock at " + date)
+    # Model Three
+    print("=========================================================")
+    print("MODEL THREE HISTORY MEAN")
+    model = ThreeMeanStockModel()
+    for r in model.predict(date):
+        if r:
+            result.update(r)
 
-down_cols = [col for col in df.columns if col.startswith('0')]
-df['down'] = df[down_cols].sum(axis=1)
+    #Model 1
+    print("=========================================================")
+    print("MODEL ONE HISTORY MEAN")
+    model = OneMeanStockModel()
+    for r in model.predict(date):
+        if r:
+            result.update(r)
 
-up_cols = [col for col in df.columns if col.startswith('2')]
-df['up'] = df[up_cols].sum(axis=1)
+    if not result:
+        return
 
-print(result_path)
-df.to_csv(os.path.join(result_path, '%s.csv' % (date)), index=True)
+    df = pd.DataFrame.from_dict(result)
+
+    down_cols = [col for col in df.columns if col.startswith('0')]
+    df['down'] = df[down_cols].sum(axis=1)
+
+    up_cols = [col for col in df.columns if col.startswith('2')]
+    df['up'] = df[up_cols].sum(axis=1)
+
+    # Add results to it
+    from future.features import get_eval_dataset
+    a, target = get_eval_dataset('history', date)
+    df = pd.concat([df, target], axis=1)
+    result_path = get_config('path', 'results')
+    df.to_csv(os.path.join(result_path, '%s.csv' % (date)), index=True)
+
+if __name__ == "__main__":
+        base = datetime.date.today()
+        predict(str(base))
+        #date_list = [base - datetime.timedelta(days=x) for x in range(3, 50)]
+        #for date in date_list:
+        #    if date.weekday() != 5 and date.weekday() != 6:
+        #        predict(str(date))

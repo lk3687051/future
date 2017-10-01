@@ -139,15 +139,22 @@ def daily_feature(date = None):
         samples[stock] = get_feature(pre_features[index : index + 60])
 
     # convert list to dataframe
+    if len(samples) == 0:
+        return None
     return samples_to_df(samples, 303)
 
 def get_predict_dateset(date):
     df = daily_feature(date)
-    return df.iloc[:, 0: 300]
+    if df is None:
+        return None
+
+    return df.iloc[:, 0:300]
 
 def get_eval_dataset(date):
     df = daily_feature(date)
-    return df[:, 0: 300], df[:, 0: 303]
+    if df is None:
+        return None, None
+    return df.iloc[:, 0: 300], df.iloc[:, 300: 303]
 
 def get_train_dataset():
     df = StockFeature.get('history')

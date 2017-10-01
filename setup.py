@@ -10,6 +10,7 @@ setup(
     install_requires=[],
     scripts=[
         'bin/stock_update',
-        'bin/stock_predict'
+        'bin/stock_predict',
+        'bin/gen_train_set'
     ],
 )
