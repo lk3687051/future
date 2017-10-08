@@ -6,6 +6,7 @@ import logging
 import time
 from future.model.cnn_three_mean import ThreeMeanStockModel
 from future.model.cnn_one_mean import OneMeanStockModel
+from future.model.cnn_one_radio import OneRadioStockModel
 from future.stock.stock import set_buy_list, get_buy_list
 import pandas as pd
 from future.utils.config import get_config
@@ -31,6 +32,13 @@ def predict(date):
         if r:
             result.update(r)
 
+    print("=========================================================")
+    print("MODEL THREE HISTORY RADIO")
+    model = OneRadioStockModel()
+    for r in model.predict(date):
+        if r:
+            result.update(r)
+
     if not result:
         return
 
@@ -50,9 +58,8 @@ def predict(date):
     df.to_csv(os.path.join(result_path, '%s.csv' % (date)), index=True)
 
 if __name__ == "__main__":
-        base = datetime.date.today()
-        predict(str(base))
-        #date_list = [base - datetime.timedelta(days=x) for x in range(3, 50)]
-        #for date in date_list:
-        #    if date.weekday() != 5 and date.weekday() != 6:
-        #        predict(str(date))
+        if len(sys.argv) == 2:
+            day = sys.argv[1]
+        else:
+            day = datetime.date.today()
+        predict(str(day))

@@ -1,11 +1,11 @@
 import datetime
 import tensorflow as tf
 from future.stock.stock import get_buy_list
-from future.features import get_predict_dateset, get_train_dataset, get_test_datesets
 import os
 import numpy as np
 from future.utils.config import get_config
 import os.path
+from future.dataset.history_feature_ratio import history_feature_ratio
 model_path = get_config('path', 'model')
 
 class StockModel():
@@ -14,32 +14,23 @@ class StockModel():
         self.mnist_classifier = tf.estimator.Estimator(
                 model_fn=self.model_fn, model_dir=os.path.join(self.model_base_path, 'master'))
 
-    def get_dataset(self, train = False, date = None):
-        if train:
-            self.features, self.labels = get_train_dataset(name = 'history')
-            self.labels = self.process_labels(self.labels[self.target_label])
-            self.test_features, self.test_labels = get_test_datesets(name = 'history')
-            self.test_labels = self.process_labels(self.test_labels[self.target_label])
-        else:
-            self.dataset = get_predict_dateset(name = 'history', date = date)
-
     def get_versions(self):
         self.versions = [f for f in os.listdir(self.model_base_path) if os.path.isdir(os.path.join(self.model_base_path, f))]
 
     def set_stock_buy_list(stocks):
         cls.stock_buy = stocks
 
-    def predict(self,  date):
-        self.get_dataset(date=date)
-        if self.dataset is None:
+    def predict(self,  date = None):
+        feature = history_feature_ratio()
+        self._get_daily_feature(date = date)
+        if self.features is None:
             return None
 
         self.input_fn = tf.estimator.inputs.numpy_input_fn(
-                    x={"x": self.dataset.values.astype(np.float32)},
+                    x={"x": self.features.values.astype(np.float32)},
                     y=None,
                     num_epochs=1,
                     shuffle=False)
-        buyed_list = get_buy_list()
         self.get_versions()
         for version in self.versions:
             # Master means this is in developing
@@ -58,7 +49,7 @@ class StockModel():
                     model_fn=self.model_fn, model_dir=model_path)
 
             model_results = self.mnist_classifier.predict(input_fn=self.input_fn)
-            for (stock, model_result) in zip(self.dataset.index,  model_results):
+            for (stock, model_result) in zip(self.daily_dataset.index,  model_results):
                 for i in range(0, label_num):
                     results[keys[i]][stock] = model_result['probabilities'][i]
             yield results

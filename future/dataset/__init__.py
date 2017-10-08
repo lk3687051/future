@@ -23,8 +23,8 @@ class dataset(object):
         return df
 
     def get_dataset(self):
-        train_df = pd.from_csv(self.train_path)
-        test_df = pd.from_csv(self.test_path)
+        train_df = pd.DataFrame.from_csv(self.train_path)
+        test_df = pd.DataFrame.from_csv(self.test_path)
         return train_df, test_df
 
     def save_dataset(self, train_df, test_df):

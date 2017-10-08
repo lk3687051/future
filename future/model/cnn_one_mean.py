@@ -1,6 +1,6 @@
 import tensorflow as tf
 import sys
-from future.features import get_predict_dateset, get_train_dataset, get_test_datesets
+from future.dataset.history_features_turnover import history_features_turnover
 from future.model import StockModel
 import numpy as np
 class OneMeanStockModel(StockModel):
@@ -8,6 +8,11 @@ class OneMeanStockModel(StockModel):
         self.name = "cnn_one_mean"
         self.target_label = 'target_price_change1'
         StockModel.__init__(self)
+
+    def _get_daily_feature(self, date = None):
+        feature = history_features_turnover(date=date)
+        self.daily_dataset = feature.daily_feature()
+        self.features = self.daily_dataset.iloc[:, 0: 300]
 
     def process_labels(self, labels):
         labels[ (-2 < labels) & (labels < 2)] = 0

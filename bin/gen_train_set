@@ -1,4 +1,7 @@
 #!/usr/bin/env python
 from future.dataset.history_feature_ratio import history_feature_ratio
+from future.dataset.history_features_turnover import history_features_turnover
 feature = history_feature_ratio()
 feature.gen_train_dataset()
+#feature = history_feature_turnover()
+#feature.gen_train_dataset()
