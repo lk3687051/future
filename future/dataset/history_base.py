@@ -1,6 +1,8 @@
 from future.stock.stock import StockInfo, StockHistory
 import datetime
 from future.dataset import dataset
+last_date  = None
+df = None
 class history_feature(dataset):
     def __init__(self, date = None):
         self.date = date
@@ -27,29 +29,37 @@ class history_feature(dataset):
         self.save_dataset(train_df, test_df)
 
     def daily_feature(self):
+        global df, last_date
+        if df is not None and self.date == last_date:
+            return df
+        end_day = (datetime.datetime.strptime(self.date,'%Y-%m-%d')  - datetime.timedelta(days=360)).strftime('%Y%m%d')
         samples = {}
         for stock in self.stock_info.index.tolist():
+            if str(self.stock_info.loc[stock,'timeToMarket']) > end_day:
+                continue
             feature = self._get_daily_featue(stock)
             if feature:
                 samples[stock] = feature
         df = self._samples_to_df(samples)
+        last_date = self.date
         return df
 
     def _get_daily_featue(self, stock):
         index = 0
-        begin_date = (datetime.datetime.strptime(self.date,'%Y-%m-%d')  - datetime.timedelta(days=100)).strftime('%Y-%m-%d')
+        begin_date = (datetime.datetime.strptime(self.date,'%Y-%m-%d')  - datetime.timedelta(days=120)).strftime('%Y-%m-%d')
         df = StockHistory.get_history(stock_id = stock)
         if df is None or df.empty:
-            print("Can not get history of stock " + stock)
+            #print("Can not get history of stock " + stock)
             return None
+        
         # If have date means we need preedict or eval
         if self.date in df.index:
             index = df.index.tolist().index(self.date)
             if len(df) < self.history_length + 1 or df.index[self.history_length] < begin_date:
-                print("Stock miss so many days " + stock)
+                #print("Stock miss so many days " + stock)
                 return None
         else:
-            print("Stock %s did not in index " % (self.date) + stock)
+            #print("Stock %s did not in index " % (self.date) + stock)
             return None
         # Why here is 61, because the last close
         pre_features = self.get_pre_process(df = df[:index + self.history_length + 1].copy())
@@ -58,6 +68,8 @@ class history_feature(dataset):
             print("pre_feature is None or length is to small")
             return None
         sample = self.get_feature(pre_features[index : index + self.history_length])
+        if sample['feature_c_change0'] >= 9.95:
+            return None
         return sample
 
     def _get_train_feature(self, stock):
@@ -74,7 +86,7 @@ class history_feature(dataset):
             date_time = pre_features.index[i]
             sample = self.get_feature(pre_features[i:i+self.history_length])
             # If today close price is bigger than 9.95 skip it. And I do not know Why.
-            if sample['feature_c_change0'] > 9.95:
+            if sample['feature_c_change0'] >= 9.95:
                 continue
             key = stock + '_' + date_time
             yield key, sample

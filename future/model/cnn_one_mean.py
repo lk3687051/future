@@ -122,8 +122,9 @@ class OneMeanStockModel(StockModel):
 
 def main():
     model = OneMeanStockModel()
-    model.train()
-    tf.app.run()
-    model.eval()
+    model.mnist_classifier.export_savedmodel('./', )
+    #model.train()
+    #tf.app.run()
+    #model.eval()
 if __name__ == "__main__":
     main()

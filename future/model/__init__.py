@@ -21,9 +21,9 @@ class StockModel():
         cls.stock_buy = stocks
 
     def predict(self,  date = None):
-        feature = history_feature_ratio()
         self._get_daily_feature(date = date)
         if self.features is None:
+            print("Did not get features")
             return None
 
         self.input_fn = tf.estimator.inputs.numpy_input_fn(

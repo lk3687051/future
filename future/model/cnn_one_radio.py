@@ -56,7 +56,7 @@ class OneRadioStockModel(StockModel):
 
         # Configure the Training Op (for TRAIN mode)
         if mode == tf.estimator.ModeKeys.TRAIN:
-            optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.005)
+            optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.001)
             train_op = optimizer.minimize(
             loss=loss,
             global_step=tf.train.get_global_step())
@@ -90,7 +90,7 @@ class OneRadioStockModel(StockModel):
         train_input_fn = tf.estimator.inputs.numpy_input_fn(
                     x={"x": self.features.values.astype(np.float32)},
                     y=self.labels.values.astype(np.float32),
-                    batch_size=100,
+                    batch_size=200,
                     num_epochs=None,
                     shuffle=True)
 
@@ -123,10 +123,10 @@ class OneRadioStockModel(StockModel):
         print(i, j)
 
 def main():
-    model = OneMeanStockModel()
-    #model.train()
-    model.eval()
-    #tf.app.run()
+    model = OneRadioStockModel()
+    model.train()
+    #model.eval()
+    tf.app.run()
 
 if __name__ == "__main__":
     main()

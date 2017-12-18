@@ -7,7 +7,9 @@ import time
 from future.model.cnn_three_mean import ThreeMeanStockModel
 from future.model.cnn_one_mean import OneMeanStockModel
 from future.model.cnn_one_radio import OneRadioStockModel
+from future.model.cnn_one_radio_avg import OneRadioAvgStockModel
 from future.stock.stock import set_buy_list, get_buy_list
+from future.dataset.history_features_turnover import history_features_turnover
 import pandas as pd
 from future.utils.config import get_config
 import os.path
@@ -39,6 +41,13 @@ def predict(date):
         if r:
             result.update(r)
 
+    print("=========================================================")
+    print("CNN MODEL ONE HISTORY RADIO AVG")
+    model = OneRadioAvgStockModel()
+    for r in model.predict(date):
+        if r:
+            result.update(r)
+
     if not result:
         return
 
@@ -51,8 +60,12 @@ def predict(date):
     df['up'] = df[up_cols].sum(axis=1)
 
     # Add results to it
-    from future.features import get_eval_dataset
-    a, target = get_eval_dataset('history', date)
+    feature = history_features_turnover(date=date)
+    target = feature.daily_feature().iloc[:, 300: 303]
+    if df.empty():
+        return
+
+    #a, target = get_eval_dataset('history', date)
     df = pd.concat([df, target], axis=1)
     result_path = get_config('path', 'results')
     df.to_csv(os.path.join(result_path, '%s.csv' % (date)), index=True)
