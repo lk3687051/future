@@ -1,0 +1,61 @@
+#!/usr/bin/env python
+import tushare as ts
+from future.stock.stock import StockHistory
+import pandas as pd
+import time
+import datetime
+from future import predictall
+turnover_percent = 0
+def calc_time_percent():
+    global turnover_percent
+    now = datetime.datetime.now()
+    hour = now.hour
+    minute = now.minute
+    if hour > 15:
+        all_minute = 4.5 * 60
+    elif hour > 13:
+        all_minute = (hour - 13 + 2.5) * 60 + minute
+    elif hour > 11 and minute > 30:
+         all_minute = 2.5 * 60 + 30
+    elif hour > 9:
+        all_minute = (hour - 9 ) * 60 + minute
+    else:
+        all_minute = 4.5 * 60
+    turnover_percent = (4.5 * 60) /  all_minute
+def update_today(data, day):
+    code = data['code']
+    data['close'] = data['trade']
+    data['turnover'] = data['turnoverratio'] * turnover_percent
+    data['volume'] = data['volume'] / 100
+    columns = ['name', 'code', 'changepercent', 'turnoverratio', 'amount', 'mktcap',  'nmc', 'pb', 'per', 'settlement', 'trade']
+    for column in columns:
+        del data[column]
+
+    ser = pd.Series(data, name=day)
+    df = StockHistory.get_history(code)
+    if df is None or df.empty:
+        return
+    df = df[0:100]
+    if day in df.index:
+        df = df.drop([day])
+    df = df.append(ser).sort_index(ascending=False)
+    StockHistory.set(code, df[0:100])
+def real_time_predict():
+    datetime.datetime.now()
+    print("Predict at %s" % str(datetime.datetime.now()))
+    start = int(time.time())
+    day = str(datetime.date.today())
+    datas = ts.get_today_all()
+    for i, data in datas.iterrows():
+        update_today(data, day)
+    df = predictall(day)
+    df = df[(df["up"] > 1.3)]
+    print(df.sort_values(by=['up'], ascending=False))
+    end = int(time.time())
+    print("Used about %d s" % (end - start))
+
+if __name__ == "__main__":
+    while(True):
+        calc_time_percent()
+        print("turnover_percent is : " + str(turnover_percent))
+        real_time_predict()

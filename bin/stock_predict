@@ -62,7 +62,7 @@ def predict(date):
     # Add results to it
     feature = history_features_turnover(date=date)
     target = feature.daily_feature().iloc[:, 300: 303]
-    if df.empty():
+    if df.empty:
         return
 
     #a, target = get_eval_dataset('history', date)

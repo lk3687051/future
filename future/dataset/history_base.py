@@ -1,7 +1,8 @@
 from future.stock.stock import StockInfo, StockHistory
 import datetime
+import time
 from future.dataset import dataset
-last_date  = None
+update_time  = None
 df = None
 class history_feature(dataset):
     def __init__(self, date = None):
@@ -29,8 +30,9 @@ class history_feature(dataset):
         self.save_dataset(train_df, test_df)
 
     def daily_feature(self):
-        global df, last_date
-        if df is not None and self.date == last_date:
+        now = int(time.time())
+        global df, update_time
+        if df is not None and now - update_time < 120:
             return df
         end_day = (datetime.datetime.strptime(self.date,'%Y-%m-%d')  - datetime.timedelta(days=360)).strftime('%Y%m%d')
         samples = {}
@@ -41,7 +43,7 @@ class history_feature(dataset):
             if feature:
                 samples[stock] = feature
         df = self._samples_to_df(samples)
-        last_date = self.date
+        update_time = int(time.time())
         return df
 
     def _get_daily_featue(self, stock):
@@ -51,11 +53,10 @@ class history_feature(dataset):
         if df is None or df.empty:
             #print("Can not get history of stock " + stock)
             return None
-        
         # If have date means we need preedict or eval
         if self.date in df.index:
             index = df.index.tolist().index(self.date)
-            if len(df) < self.history_length + 1 or df.index[self.history_length] < begin_date:
+            if len(df) < self.history_length + 1 or df.index[self.history_length + index] < begin_date:
                 #print("Stock miss so many days " + stock)
                 return None
         else:
@@ -68,6 +69,8 @@ class history_feature(dataset):
             print("pre_feature is None or length is to small")
             return None
         sample = self.get_feature(pre_features[index : index + self.history_length])
+
+
         if sample['feature_c_change0'] >= 9.95:
             return None
         return sample

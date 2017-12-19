@@ -59,7 +59,7 @@ def predict(date):
 
     up_cols = [col for col in df.columns if col.startswith('2')]
     df['up'] = df[up_cols].sum(axis=1)
-    if df.empty():
+    if df.empty:
         return
     # Add results to it
     feature = history_features_turnover(date=date)
