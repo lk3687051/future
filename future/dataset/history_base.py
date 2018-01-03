@@ -3,6 +3,7 @@ import datetime
 import time
 from future.dataset import dataset
 update_time  = None
+update_date = None
 df = None
 class history_feature(dataset):
     def __init__(self, date = None):
@@ -31,19 +32,23 @@ class history_feature(dataset):
 
     def daily_feature(self):
         now = int(time.time())
-        global df, update_time
-        if df is not None and now - update_time < 120:
+        global df, update_time, update_date
+        if df is not None and now - update_time < 120 and self.date == update_date:
             return df
         end_day = (datetime.datetime.strptime(self.date,'%Y-%m-%d')  - datetime.timedelta(days=360)).strftime('%Y%m%d')
         samples = {}
         for stock in self.stock_info.index.tolist():
             if str(self.stock_info.loc[stock,'timeToMarket']) > end_day:
                 continue
-            feature = self._get_daily_featue(stock)
+            try:
+                feature = self._get_daily_featue(stock)
+            except:
+                feature = None
             if feature:
                 samples[stock] = feature
         df = self._samples_to_df(samples)
         update_time = int(time.time())
+        update_date = self.date
         return df
 
     def _get_daily_featue(self, stock):

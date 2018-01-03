@@ -9,17 +9,27 @@ def get_files(path):
     return file_list
 files = get_files('./results')
 base = 100
+count = 0
+radios = []
 for result_file in files:
-    df = pd.read_csv(result_file)
-    df = df[(df["up"] > 1.6)]
-    print(df['target_price_change1'].values)
     print('------------------------------------------------------------------------------------------------------------------------------------')
     print(result_file)
-    mean_50 = df['target_price_change1'].mean()
+    df = pd.read_csv(result_file)
+    mean_up = df['up'].mean()
+    mean_change = df['target_price_change1'].mean()
+    print(mean_up, mean_change)
+    df = df[(df["up"] > 1.3)]
+
+    #mean_50 = df.sort_values(by=['2-20170913-cnn_three_mean'], ascending=False).head(1)['target_price_change1'].mean()
+    mean_50 = df.sort_values(by=['up'], ascending=False).head(1)['target_price_change1'].mean()
+
     if pd.isnull(mean_50):
         continue
-    base = base * (1+ mean_50 * 0.01 )
-    #print('base: ' + str(base))
-    #print(mean_50)
-    #mean = df.sort_values(by=['2-20170913-cnn_three_mean'], ascending=False)['target_price_change1'].mean()
-    #print(mean_50, mean, mean_50 - mean)
+    count = count + 1
+    radios.append(mean_50)
+    base = base * (1+ mean_50 * 0.01 - 0.0015)
+    print('base: ' + str(base))
+
+import numpy as np
+print(np.mean(radios))
+print(sorted(radios))

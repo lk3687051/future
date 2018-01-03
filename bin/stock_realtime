@@ -13,11 +13,11 @@ def calc_time_percent():
     minute = now.minute
     if hour > 15:
         all_minute = 4.5 * 60
-    elif hour > 13:
+    elif hour >= 13:
         all_minute = (hour - 13 + 2.5) * 60 + minute
-    elif hour > 11 and minute > 30:
+    elif hour >= 11 and minute > 30:
          all_minute = 2.5 * 60 + 30
-    elif hour > 9:
+    elif hour >= 9:
         all_minute = (hour - 9 ) * 60 + minute
     else:
         all_minute = 4.5 * 60
@@ -41,16 +41,20 @@ def update_today(data, day):
     df = df.append(ser).sort_index(ascending=False)
     StockHistory.set(code, df[0:100])
 def real_time_predict():
+    buy_list = ['603019']
     datetime.datetime.now()
     print("Predict at %s" % str(datetime.datetime.now()))
     start = int(time.time())
     day = str(datetime.date.today())
     datas = ts.get_today_all()
+    print('\n')
     for i, data in datas.iterrows():
         update_today(data, day)
     df = predictall(day)
-    df = df[(df["up"] > 1.3)]
-    print(df.sort_values(by=['up'], ascending=False))
+    df_a = df.sort_values(by=['up'], ascending=False).head(3)
+    df_b = df.loc[buy_list, :]
+    df = df_a.append(df_b)
+    print(df.sort_values(by=['up'], ascending=False).iloc[:,4:8])
     end = int(time.time())
     print("Used about %d s" % (end - start))
 

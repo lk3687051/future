@@ -117,8 +117,6 @@ class ThreeMeanStockModel(StockModel):
                 print(predict, label)
                 if predict['classes'] == int(label):
                     j = j + 1
-        print("hhhhhhhhhh ")
-        print(i, j)
 
 def main():
     model = ThreeMeanStockModel()

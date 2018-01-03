@@ -22,7 +22,11 @@ class StockHistory(object):
 
     @classmethod
     def set(cls, stock_id, df):
-        cls.store[cls._gen_key(stock_id)] = df
+        try:
+            cls.store[cls._gen_key(stock_id)] = df
+        except Exception as e:
+            print("Set stock Error " , stock_id)
+
 
     @classmethod
     def get_history(cls, stock_id = None, start = None, end = None):
@@ -30,11 +34,15 @@ class StockHistory(object):
         if type(start) is datetime.date:
             start = str(start)
             end = str(end)
+        try:
+            if key in cls.store:
+                if start and end:
+                    return cls.store[key].loc[end:start]
+                return cls.store[key]
+        except Exception as e:
+            print("Can not get history", stock_id)
+            return None
 
-        if key in cls.store:
-            if start and end:
-                return cls.store[key].loc[end:start]
-            return cls.store[key]
 
     @classmethod
     def get_date(cls, date = None, stock_list = None):

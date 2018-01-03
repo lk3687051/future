@@ -71,7 +71,7 @@ def predict(date):
     df.to_csv(os.path.join(result_path, '%s.csv' % (date)), index=True)
 
 if __name__ == "__main__":
-    a = datetime.date(2017, 9, 1)
+    a = datetime.date(2017, 6, 1)
     b = datetime.date(2017, 12, 15)
     for dt in rrule(DAILY, dtstart=a, until=b):
         dt_str = dt.strftime("%Y-%m-%d")

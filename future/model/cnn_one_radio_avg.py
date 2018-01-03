@@ -116,11 +116,8 @@ class OneRadioAvgStockModel(StockModel):
         for predict, label in zip(predict_results, self.labels.values.astype(np.float32)):
             if (predict['probabilities'][2] > 0.90) and (predict['probabilities'][2] < 1):
                 i = i +1
-                print(predict, label)
                 if predict['classes'] == int(label):
                     j = j + 1
-        print("hhhhhhhhhh ")
-        print(i, j)
 
 def main():
     model = OneRadioStockModel()
