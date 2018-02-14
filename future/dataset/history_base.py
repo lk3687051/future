@@ -86,7 +86,7 @@ class history_feature(dataset):
             return None
         pre_features = self.get_pre_process(df = df)
         # The train dataset just contains below 2017-07-01
-        pre_features = pre_features['2017-07-01': ]
+        pre_features = pre_features['2018-01-01': ]
         # Make sure the features is more than 60 days
         if pre_features is None or len(pre_features) < self.history_length:
             return None

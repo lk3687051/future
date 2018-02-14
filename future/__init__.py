@@ -27,17 +27,17 @@ def predictall(date):
         if r:
             result.update(r)
 
-    model = OneRadioStockModel()
-    for r in model.predict(date):
-        if r:
-            result.update(r)
-
-    model = OneRadioAvgStockModel()
-    for r in model.predict(date):
-        if r:
-            result.update(r)
-    if not result:
-        return
+    # model = OneRadioStockModel()
+    # for r in model.predict(date):
+    #     if r:
+    #         result.update(r)
+    #
+    # model = OneRadioAvgStockModel()
+    # for r in model.predict(date):
+    #     if r:
+    #         result.update(r)
+    # if not result:
+    #     return
     df = pd.DataFrame.from_dict(result)
     down_cols = [col for col in df.columns if col.startswith('0')]
     df['down'] = df[down_cols].sum(axis=1)

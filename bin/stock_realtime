@@ -5,6 +5,9 @@ import pandas as pd
 import time
 import datetime
 from future import predictall
+from future.utils.notify import notify
+import sys
+buy_list = None
 turnover_percent = 0
 def calc_time_percent():
     global turnover_percent
@@ -41,7 +44,6 @@ def update_today(data, day):
     df = df.append(ser).sort_index(ascending=False)
     StockHistory.set(code, df[0:100])
 def real_time_predict():
-    buy_list = ['603019']
     datetime.datetime.now()
     print("Predict at %s" % str(datetime.datetime.now()))
     start = int(time.time())
@@ -52,14 +54,20 @@ def real_time_predict():
         update_today(data, day)
     df = predictall(day)
     df_a = df.sort_values(by=['up'], ascending=False).head(3)
-    df_b = df.loc[buy_list, :]
+    try:
+        df_b = df.loc[buy_list, :]
+    except Exception as e:
+        df_b = None
+
     df = df_a.append(df_b)
-    print(df.sort_values(by=['up'], ascending=False).iloc[:,4:8])
+    msg = str(df.sort_values(by=['up'], ascending=False).iloc[:,4:8])
+    notify(msg)
     end = int(time.time())
     print("Used about %d s" % (end - start))
 
 if __name__ == "__main__":
-    while(True):
-        calc_time_percent()
-        print("turnover_percent is : " + str(turnover_percent))
-        real_time_predict()
+    if len(sys.argv) > 1:
+        buy_list = sys.argv[1:]
+    calc_time_percent()
+    print("turnover_percent is : " + str(turnover_percent))
+    real_time_predict()
