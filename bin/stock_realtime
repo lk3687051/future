@@ -52,6 +52,7 @@ def real_time_predict():
     print('\n')
     for i, data in datas.iterrows():
         update_today(data, day)
+
     df = predictall(day)
     df_a = df.sort_values(by=['up'], ascending=False).head(3)
     try:
@@ -61,7 +62,7 @@ def real_time_predict():
 
     df = df_a.append(df_b)
     msg = str(df.sort_values(by=['up'], ascending=False).iloc[:,4:8])
-    notify(msg)
+    print(msg)
     end = int(time.time())
     print("Used about %d s" % (end - start))
 

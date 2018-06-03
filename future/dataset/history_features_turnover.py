@@ -17,7 +17,6 @@ class history_features_turnover(history_feature):
         feature_df['feature_c_change'] = (df['close'] - df['close1'] )/ df['close1']
         feature_df['feature_o_change'] = (df['open'] - df['close1'])/df['close1']
         feature_df['feature_turnover'] = df['turnover']
-
         # 获取预测值
         feature_df['target_price_change1'] =  df['p_change'].shift(1)
         feature_df['target_price_change3'] =  (df['p_change'].shift(1) + \
@@ -29,7 +28,6 @@ class history_features_turnover(history_feature):
                                                                 df['p_change'].shift(3) + \
                                                                 df['p_change'].shift(4) + \
                                                                 df['p_change'].shift(5) ) / 5
-
         return feature_df
 
     def get_feature(self, pre_feature):

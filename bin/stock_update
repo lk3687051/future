@@ -2,14 +2,44 @@
 import tushare as ts
 import time
 from multiprocessing import Pool
+import requests
+import time
+import json
+import pandas as pd
+
+def _code_to_symbol(code):
+        return 'SH%s'%code if code[:1] in ['5', '6', '9'] else 'SZ%s'%code
+def get_history(code):
+    url = "https://stock.xueqiu.com/v5/stock/chart/kline.json"
+    symbol = _code_to_symbol(code)
+    querystring = {"symbol":symbol,"begin":int(time.time()*1000),"period":"day","type":"normal","count":"-100","indicator":"kline"}
+    headers = {
+        'content-type': "application/json",
+        'User-Agent': 'Mozilla/5.0 (Windows NT 6.2; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0',
+        'accept': "application/json",
+        'cache-control': "no-cache",
+        'Cookie': "_ga=GA1.2.978210058.1527479363; device_id=5d245843a4963decab0f7bca76ae8813; xq_a_token=7023b46a2c20d7b0530b4e9725f7f869c8d16e7d; xq_a_token.sig=ENETvzFNvxxbtpbc1TfjQpBjoaE; xq_r_token=19bf36bc92fc764fb5cc550744d7fe922069fd14; xq_r_token.sig=dRocG0wcTXQQLq8b3AmLY9RYqyk; u=951527656145502; s=g218mgakmd; Hm_lvt_1db88642e346389874251b5a1eded6e3=1527745614,1527745634,1527746275,1527748347; Hm_lpvt_1db88642e346389874251b5a1eded6e3=1527751408"
+        }
+    response = requests.request("GET", url, headers=headers, params=querystring)
+    js = json.loads(response.text)
+    df = pd.read_json(json.dumps(js['data']['item']))
+    df.set_axis(js['data']['column'] , axis='columns', inplace=True)
+    df['timestamp'] = df['timestamp'] + 28800000
+    df['date'] = pd.to_datetime(df['timestamp'], unit='ms').dt.strftime('%Y-%m-%d')
+    df.set_index('date', inplace=True)
+    df.drop('timestamp', axis=1, inplace=True)
+    #df = pd.DataFrame(data,  columns=js['data']['column'])
+    df.rename(columns={'turnoverrate': 'turnover', 'percent': 'p_change', 'chg': 'price_change'}, inplace=True)
+    df.sort_index(ascending =False, inplace=True)
+    return df
 
 def mp_worker(stock_id):
     for i in range(0,5):
         try:
-            df = ts.get_hist_data(stock_id)
+            df =get_history(stock_id)
             return (stock_id, df)
         except:
-            print("Can not get data, " + str(i))
+            print("Can not get data, " + str(stock_id))
 
 if __name__ == '__main__':
     from future.stock.stock import StockInfo, StockHistory

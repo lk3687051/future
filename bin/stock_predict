@@ -34,25 +34,10 @@ def predict(date):
         if r:
             result.update(r)
 
-    print("=========================================================")
-    print("MODEL THREE HISTORY RADIO")
-    model = OneRadioStockModel()
-    for r in model.predict(date):
-        if r:
-            result.update(r)
-
-    print("=========================================================")
-    print("CNN MODEL ONE HISTORY RADIO AVG")
-    model = OneRadioAvgStockModel()
-    for r in model.predict(date):
-        if r:
-            result.update(r)
-
     if not result:
         return
 
     df = pd.DataFrame.from_dict(result)
-
     down_cols = [col for col in df.columns if col.startswith('0')]
     df['down'] = df[down_cols].sum(axis=1)
 

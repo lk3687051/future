@@ -1,6 +1,7 @@
 from future.stock.stock import StockInfo, StockHistory
 import datetime
 import time
+import os
 from future.dataset import dataset
 update_time  = None
 update_date = None
@@ -55,6 +56,7 @@ class history_feature(dataset):
         index = 0
         begin_date = (datetime.datetime.strptime(self.date,'%Y-%m-%d')  - datetime.timedelta(days=120)).strftime('%Y-%m-%d')
         df = StockHistory.get_history(stock_id = stock)
+
         if df is None or df.empty:
             #print("Can not get history of stock " + stock)
             return None
@@ -71,7 +73,7 @@ class history_feature(dataset):
         pre_features = self.get_pre_process(df = df[:index + self.history_length + 1].copy())
         # Make sure the features is more than 60 days
         if pre_features is None or len(pre_features) < index + self.history_length:
-            print("pre_feature is None or length is to small")
+            #print("pre_feature is None or length is to small")
             return None
         sample = self.get_feature(pre_features[index : index + self.history_length])
 

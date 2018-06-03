@@ -25,7 +25,6 @@ class StockModel():
         if self.features is None:
             print("Did not get features")
             return None
-
         self.input_fn = tf.estimator.inputs.numpy_input_fn(
                     x={"x": self.features.values.astype(np.float32)},
                     y=None,
